@@ -239,33 +239,18 @@ lemma partition_not_inR_nonempty:"\<forall>x\<in>s. card x = 1 \<Longrightarrow>
   apply simp
   by (meson partition_not_inR.simps(2))
 
-
 lemma Union_del_eq:
   assumes "\<forall>x\<in>s. card x = 1"
   shows "\<Union>s - {a} - {b} = \<Union>(s - {{a}} - {{b}})"
 proof
-  show "\<Union>s - {a} - {b} \<subseteq> \<Union>(s - {{a}} - {{b}})"
-  proof
-    fix x
-    assume "x \<in> \<Union>s - {a} - {b}"
-    then have "x \<in> \<Union>s" and "x \<notin> {a}" and "x \<notin> {b}" by blast+
-    then obtain X where "X \<in> s" and "x \<in> X" by auto
-    then have "X - {a} - {b} = X" using assms
-      by (metis Diff_empty Diff_insert0 \<open>x \<notin> {a}\<close> \<open>x \<notin> {b}\<close> card_1_singletonE empty_iff insert_iff) by auto
-    with \<open>X \<in> s\<close> have "x \<in> \<Union>(s - {{a}} - {{b}})"
-      using \<open>x \<in> X\<close> by blast 
-    thus "x \<in> \<Union>(s - {{a}} - {{b}})" .
-  qed
-
+  show "\<Union>s - {a} - {b} \<subseteq> \<Union>(s - {{a}} - {{b}})" by blast
   show "\<Union>(s - {{a}} - {{b}}) \<subseteq> \<Union>s - {a} - {b}"
   proof
-    fix x
-    assume "x \<in> \<Union>(s - {{a}} - {{b}})"
+    fix x  assume "x \<in> \<Union>(s - {{a}} - {{b}})"
     then obtain X where "X \<in> s - {{a}} - {{b}}" and "x \<in> X" by auto
     then have "X \<in> s" and "X \<noteq> {a}" and "X \<noteq> {b}" by auto
-    then have "X - {a} - {b} = X" 
-      apply auto
-      by (metis assms card_1_singletonE empty_iff insert_iff)+
+    then have "X - {a} - {b} = X" apply auto
+    by (metis assms card_1_singletonE empty_iff insert_iff)+
     with \<open>x \<in> X\<close> and \<open>X \<in> s\<close> have "x \<in> \<Union>s - {a} - {b}" by auto
     thus "x \<in> \<Union>s - {a} - {b}" .
   qed
@@ -308,8 +293,6 @@ lemma partition_not_inR_correct:"f\<noteq>[] \<Longrightarrow> s=(get_NFTS_state
 lemma partition_init_correct:"f\<noteq>[] \<Longrightarrow> s= (get_NFTS_states_set f)\<Longrightarrow> (get_R_states_set r)=s\<Longrightarrow> partition_init r s = s"
   by (simp add: get_R_states_set_list partition_not_inR_correct get_NFTS_states_set_notempty partition_init_def) 
   
-
-
 lemma partition_invariance: "union_set (partition r s) = union_set s"
 proof (induction r arbitrary: s)
   case Nil
@@ -358,8 +341,6 @@ lemma R_closed_set_Sempty:"R_closed_set r [] = partition r (get_R_states_set r)"
 lemma R_closed_subset:" get_R_states_set r \<subseteq> get_NFTS_states_set f \<Longrightarrow>x \<in> (R_closed_set r f) \<Longrightarrow> x \<subseteq> \<Union> (get_NFTS_states_set f)"
   apply (simp add:R_closed_set_def union_set_def partition_init_def)
   by (smt (z3) Union_Un_distrib order_subst1 partition_not_inR_subset1 partition_subset subset_Un_eq subset_refl sup_mono union_set_def)
-
-
 
 lemma partition_correct_eq:" subset s0 s = subset t0 s \<Longrightarrow> B \<in> partition r s \<Longrightarrow> s0\<in>B \<longleftrightarrow> t0\<in>B"
   apply (induct r arbitrary:s)
@@ -455,8 +436,6 @@ lemma R_closed_set_correct:"s=(partition_init r (get_NFTS_states_set f)) \<Longr
   apply (simp add:R_closed_set_def )
   by (simp add: partition_correct)
 
-
-
 definition Distr_equal_check::"R \<Rightarrow> Distr \<Rightarrow> Distr \<Rightarrow>  NFTS \<Rightarrow> bool"where
 "Distr_equal_check r \<mu> \<nu> f \<equiv> \<forall>B \<in> (R_closed_set r f). get_values_set \<mu> B = get_values_set \<nu> B"
 
@@ -473,8 +452,6 @@ fun BIS_R_closed::"R \<Rightarrow> R \<Rightarrow> NFTS \<Rightarrow> bool" wher
 
 definition is_equivalence_R ::"R \<Rightarrow> NFTS \<Rightarrow> bool"where
 "is_equivalence_R R f \<equiv> BIS_R_closed R R f"
-
-
 
 lemma get_R_states_set_correct2:"B\<in>(get_R_states_set r) \<Longrightarrow> s1\<in>B \<Longrightarrow> \<exists>(a,b)\<in>set r. a=s1\<or> b= s1"
   by (induct r) auto 

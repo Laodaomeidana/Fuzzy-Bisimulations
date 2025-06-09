@@ -4,103 +4,50 @@ begin
 
 lemma partition_init_subset_nonempty:
   "f\<noteq>[] \<Longrightarrow>s = (partition_init r (get_NFTS_states_set f)) \<Longrightarrow> \<forall>(s0,t0)\<in>set r. (subset s0 s)\<noteq>{}\<and>(subset t0 s)\<noteq>{}"
-  apply (simp add:partition_init_def)
-  apply auto
-  apply (simp add: get_R_states_subset_correct subset_union)
-  apply (metis Un_empty get_R_statses_set_correct insertCI subset_empty_iff subset_union)
-  apply (metis (no_types) all_not_in_conv get_NFTS_states_set_subset set_empty)
-  by (metis all_not_in_conv get_NFTS_states_set_subset set_empty)
+using partition_init_def get_R_states_set_notempt subset_union by auto
 
 lemma Rright_R_closed_set:"\<forall>(s0,t0)\<in>set r. (subset s0 s)\<noteq>{}\<and>(subset t0 s)\<noteq>{} \<Longrightarrow> B\<in>partition r s 
                             \<Longrightarrow>(s1,t1)\<in>set r \<Longrightarrow> s1\<in>B \<Longrightarrow> set (R_right r s1) \<subseteq> B"
-  apply (subgoal_tac"t1 \<in> set (R_right r s1) \<and> t1\<in>B") defer
-  apply (simp add: R_right_correct)
-  using R_right_correct partition_correct_s0t0 apply fastforce
-  apply auto
-  apply (subgoal_tac "(s1,x)\<in> set r") defer
-  using R_right_subset apply blast
-  by (metis (mono_tags, lifting) case_prodD partition_correct)
+  by (smt (verit) R_right_correct case_prod_conv partition_correct_s0t0 subsetI)
 
 lemma Rright_R_closed_set_2:"f\<noteq>[] \<Longrightarrow>s = (partition_init r (get_NFTS_states_set f)) \<Longrightarrow> B\<in>partition r s 
                             \<Longrightarrow>(s1,t1)\<in>set r \<Longrightarrow> s1\<in>B \<Longrightarrow> set (R_right r s1) \<subseteq> B"
   apply (subgoal_tac"t1 \<in> set (R_right r s1) \<and> t1\<in>B") defer
-  apply (simp add: R_right_correct)
-  using partition_correct partition_init_subset_nonempty
-  apply (smt (verit) R_right_correct Rright_R_closed_set subsetD)
+  using R_right_correct partition_correct partition_init_subset_nonempty
+  apply (smt (verit) old.prod.case surj_pair)
   apply auto
   apply (subgoal_tac "(s1,x)\<in> set r") defer
   using R_right_subset apply blast
-  using partition_init_subset_nonempty
-proof -
-  fix x :: "char list"
-  assume a1: "s1 \<in> B"
-  assume a2: "f \<noteq> []"
-  assume a3: "s = partition_init r (get_NFTS_states_set f)"
-  assume a4: "(s1, t1) \<in> set r"
-  assume a5: "x \<in> set (R_right r s1)"
-  assume "B \<in> Bis_R_closed.partition r (partition_init r (get_NFTS_states_set f))"
-  then have "B \<in> Bis_R_closed.partition r s"
-    using a3 by meson
-  then show "x \<in> B"
-    using a5 a4 a3 a2 a1 by (meson partition_init_subset_nonempty Rright_R_closed_set subset_iff)
-qed
+  using partition_init_subset_nonempty by (smt (verit, best) Rright_R_closed_set in_mono)
 
 lemma Rleft_R_closed_set:"\<forall>(s0,t0)\<in>set r. (subset s0 s)\<noteq>{}\<and>(subset t0 s)\<noteq>{} \<Longrightarrow> B\<in>partition r s 
                             \<Longrightarrow>(s1,t1)\<in>set r \<Longrightarrow> t1\<in>B \<Longrightarrow> set (R_left r t1) \<subseteq> B"
-  apply (subgoal_tac"s1 \<in> set (R_left r t1) \<and> s1\<in>B") defer
-  apply (simp add: R_right_correct)
-  using R_right_R_left R_right_correct partition_correct apply fastforce
-  apply auto
-  apply (subgoal_tac "(x,t1)\<in> set r") defer
-  using R_left_subset apply blast
-  by (metis (mono_tags, lifting) case_prodD partition_correct)
+  by (smt (verit, del_insts) R_left_correct case_prodD partition_correct subsetI)
 
 lemma Rleft_R_closed_set_2:"f\<noteq>[] \<Longrightarrow>s = (partition_init r (get_NFTS_states_set f)) \<Longrightarrow> B\<in>partition r s 
                             \<Longrightarrow>(s1,t1)\<in>set r \<Longrightarrow> t1\<in>B \<Longrightarrow> set (R_left r t1) \<subseteq> B"
   apply (subgoal_tac"s1 \<in> set (R_left r t1) \<and> s1\<in>B") defer
-  apply (simp add: R_left_correct)
-  using partition_correct partition_init_subset_nonempty
-  apply (smt (verit) R_left_correct Rleft_R_closed_set subsetD)
+  using  R_left_correct partition_correct partition_init_subset_nonempty
+  apply fastforce
   apply auto
   apply (subgoal_tac "(x,t1)\<in> set r") defer
   using R_left_subset apply blast
-  using partition_init_subset_nonempty
-  by (smt (verit) old.prod.case partition_correct prod.inject surj_pair) 
-
+  using partition_init_subset_nonempty 
+  by (smt (verit) Rleft_R_closed_set in_mono)
 
 lemma R_closed_set_allstate_inR:
   "f\<noteq>[] \<Longrightarrow>(get_R_states_set r) = (get_NFTS_states_set f)\<Longrightarrow>B\<in>(R_closed_set r f)\<Longrightarrow> \<forall>s\<in>B. s\<in>set (get_R_states r)"
-  apply (simp add:R_closed_set_def partition_init_def)
-  apply (subgoal_tac "get_NFTS_states_set f \<noteq> {}" )defer
-   apply (smt (verit, del_insts) Un_iff Union_empty get_R_states_list_set_elem 
-          get_R_states_set.elims insertCI insert_absorb insert_not_empty partition_Sempty)
-  apply simp
-  apply (subgoal_tac "partition_not_inR r (get_NFTS_states_set f) = {}") defer
-  using get_R_states_set_list partition_not_inR_correct apply auto[1]
-  apply (subgoal_tac "B\<in>partition r (get_R_states_set r)") defer
-  apply simp
-  apply auto
-  by (metis Union_iff get_R_states_list_set_elem get_R_states_set_subset partition_invariance union_set_def)
+  by (simp add: R_closed_set_def get_R_states_list_set_elem partition_get_R_states_set partition_init_correct)
 
 lemma allstate_inR_closed_set:
   "f\<noteq>[] \<Longrightarrow>(get_R_states_set r) = (get_NFTS_states_set f)\<Longrightarrow>(\<forall>s1\<in>set(get_R_states r). \<exists>B\<in>(R_closed_set r f). s1\<in>B)"
-  apply (simp add:R_closed_set_def partition_init_def)
-  apply (subgoal_tac "get_NFTS_states_set f \<noteq> {}" )defer
-  apply (simp add: get_NFTS_states_set_notempty)
-  apply simp
-  apply (subgoal_tac "partition_not_inR r (get_NFTS_states_set f) = {}") defer
-  apply (simp add: get_R_states_set_list partition_not_inR_correct)
-  apply simp
-  apply (subgoal_tac "union_set (partition r (get_R_states_set r)) = union_set (get_R_states_set r)")
-  apply (metis Union_iff get_R_states_list_set_elem insertI1 union_set_def)
-  using partition_invariance by auto
-
-
+  by (metis R_closed_set_def UnionE get_R_states_set_list partition_init_correct partition_invariance union_set_def)
+ 
 lemma get_Distr_states_set_get_states:"\<Union>(get_Distr_states_set u) = set (get_states u)"
   by (induct u) auto
+
 lemma get_NFTS_states_set_allstates:"\<Union>(get_NFTS_states_set f) = (allstates f)"
-  apply (induct f)
-  apply simp
+  apply (induct f) apply simp
   apply (subgoal_tac "(get_NFTS_states_set (a # f)) = {{fst a}} \<union> (get_Distr_states_set (snd (snd a))) \<union> get_NFTS_states_set f") defer
   apply simp
   apply (subgoal_tac "allstates (a # f) = {fst a} \<union> set (get_states (snd (snd a))) \<union> allstates f") defer
@@ -111,18 +58,14 @@ lemma get_NFTS_states_set_allstates:"\<Union>(get_NFTS_states_set f) = (allstate
 
 
 lemma partition_init_finite:"f\<noteq>[] \<Longrightarrow>finite (\<Union>(partition_init r (get_NFTS_states_set f)))"
-  apply (simp add: partition_init_def)
-  apply auto defer
+  apply (auto simp add: partition_init_def) defer
   apply (metis List.finite_set get_R_states_set_list)
   apply (simp add: get_NFTS_states_set_notempty)
   apply (subgoal_tac "finite(\<Union>(get_NFTS_states_set f))")
   apply (metis partition_not_inR_subset1 rev_finite_subset union_set_def) 
-  apply (induct f)
-  apply auto
+  apply (induct f) apply auto          
   apply (simp_all add: get_Distr_states_set_get_states)
-  apply fastforce
-  apply (metis Sup_bot_conv(1) Union_empty finite.emptyI get_NFTS_states_set.simps(1))
-  by fastforce
+  apply fastforce apply fastforce by fastforce
 
 lemma R_closed_set_finite:"f\<noteq>[] \<Longrightarrow>B\<in>(R_closed_set r f) \<Longrightarrow> finite B"
   apply (simp add:R_closed_set_def)
@@ -362,11 +305,6 @@ theorem RL_R_closed:"f\<noteq>[] \<Longrightarrow> equiv (allstates f) (set r)  
   using R_closed_set_relation get_values_set_eq apply fastforce 
   by (meson R_closed_set_finite RL_R_closed_lemma)
 
-
-(*
-by (smt (verit) RL_R_closed_lemma R_closed_set_def R_closed_set_finite R_closed_set_relation Union_upper get_R_states_set_list get_values_set_eq partition_init_correct partition_invariance subset_iff union_set_def)
-*)
-
 lemma RL_check_R_closed:"f\<noteq>[] \<Longrightarrow> equiv (allstates f) (set r)  \<Longrightarrow> (get_R_states_set r)= (get_NFTS_states_set f) \<Longrightarrow>
                    RL_check r \<mu> \<nu> \<Longrightarrow> B \<in> (R_closed_set r f) \<Longrightarrow> get_values_set \<mu> B = get_values_set \<nu> B"
   apply (simp add: RL_check_def)
@@ -391,32 +329,8 @@ lemma BIS_R_correct1:"(s,t)\<in>set (BIS r1 r2 f) \<Longrightarrow>
 lemma BIS_R_correct:"r = BIS r1 r2 f \<Longrightarrow> (s,t)\<in>set r \<Longrightarrow>
                      \<forall>a1\<in>set(get_act (s,t) f (allact f)). RL_check_dl r2 (get_distr f s a1) (get_distr f t a1)"
   apply (induct r1 r2 f rule: BIS.induct)
-  apply simp
-  apply auto
-proof -
-  fix s0 :: "char list" and t0 :: "char list" and xs :: "(char list \<times> char list) list" and ra :: "(char list \<times> char list) list" and fa :: "(char list \<times> char list \<times> (real \<times> char list) list) list" and a1 :: "char list"
-  assume a1: "a1 \<in> set (get_act (s, t) fa (allact fa))"
-  assume a2: "(s, t) \<in> set (if \<forall>a1\<in>set (get_act (s0, t0) fa (allact fa)). RL_check_dl ra (get_distr fa s0 a1) (get_distr fa t0 a1) then (s0, t0) # BIS xs ra fa else BIS xs ra fa)"
-  assume "r = (if \<forall>a1\<in>set (get_act (s0, t0) fa (allact fa)). RL_check_dl ra (get_distr fa s0 a1) (get_distr fa t0 a1) then (s0, t0) # BIS xs ra fa else BIS xs ra fa)"
-  obtain ccs :: "char list" where
-    f3: "(s, t) \<in> set (if \<forall>cs. cs \<in> set (get_act (s0, t0) fa (allact fa)) \<longrightarrow> RL_check_dl ra (get_distr fa s0 cs) (get_distr fa t0 cs) then (s0, t0) # BIS xs ra fa else BIS xs ra fa) \<and> ((ccs \<in> set (get_act (s0, t0) fa (allact fa)) \<longrightarrow> RL_check_dl ra (get_distr fa s0 ccs) (get_distr fa t0 ccs)) \<longrightarrow> (s0, t0) # BIS xs ra fa = (if \<forall>cs. cs \<in> set (get_act (s0, t0) fa (allact fa)) \<longrightarrow> RL_check_dl ra (get_distr fa s0 cs) (get_distr fa t0 cs) then (s0, t0) # BIS xs ra fa else BIS xs ra fa)) \<and> ((\<exists>cs. cs \<in> set (get_act (s0, t0) fa (allact fa)) \<and> \<not> RL_check_dl ra (get_distr fa s0 cs) (get_distr fa t0 cs)) \<longrightarrow> BIS xs ra fa = (if \<forall>cs. cs \<in> set (get_act (s0, t0) fa (allact fa)) \<longrightarrow> RL_check_dl ra (get_distr fa s0 cs) (get_distr fa t0 cs) then (s0, t0) # BIS xs ra fa else BIS xs ra fa))"
-    using a2 by metis
-  have "\<forall>cs csa csb csc. (cs::char list, csa::char list) \<noteq> (csb, csc) \<or> cs = csb \<and> csa = csc"
-    by blast
-  then have f4: "(s0, t0) \<noteq> (s, t) \<or> t = t0"
-    by metis
-  have f5: "(s0, t0) \<noteq> (s, t) \<or> s = s0"
-    by auto
-  { assume "RL_check_dl ra (get_distr fa s0 a1) (get_distr fa t0 a1)"
-    then have "(s0, t0) = (s, t) \<longrightarrow> RL_check_dl ra (get_distr fa s a1) (get_distr fa t a1)"
-      using f5 f4 by meson }
-  then have "(s0, t0) # BIS xs ra fa = (if \<forall>cs. cs \<in> set (get_act (s0, t0) fa (allact fa)) \<longrightarrow> RL_check_dl ra (get_distr fa s0 cs) (get_distr fa t0 cs) then (s0, t0) # BIS xs ra fa else BIS xs ra fa) \<longrightarrow> RL_check_dl ra (get_distr fa s a1) (get_distr fa t a1) \<or> (s, t) \<in> set (BIS xs ra fa) \<or> BIS xs ra fa = (if \<forall>cs. cs \<in> set (get_act (s0, t0) fa (allact fa)) \<longrightarrow> RL_check_dl ra (get_distr fa s0 cs) (get_distr fa t0 cs) then (s0, t0) # BIS xs ra fa else BIS xs ra fa) \<or> (\<exists>cs. cs \<in> set (get_act (s0, t0) fa (allact fa)) \<and> \<not> RL_check_dl ra (get_distr fa s0 cs) (get_distr fa t0 cs))"
-    using f3 a1 by force
-  then have "(s, t) \<in> set (BIS xs ra fa) \<or> RL_check_dl ra (get_distr fa s a1) (get_distr fa t a1)"
-    using f3 by auto
-  then show "RL_check_dl ra (get_distr fa s a1) (get_distr fa t a1)"
-    using a1 by (metis BIS_R_correct1)
-qed
+   apply simp
+ by (meson BIS_R_correct1)
 
 lemma BIS_induct_R_correct:"r = BIS_induct r1 f \<Longrightarrow> (s,t)\<in>set r \<Longrightarrow>
                             (\<forall>a1\<in>set(get_act (s,t) f (allact f)). RL_check_dl r (get_distr f s a1) (get_distr f t a1))"
@@ -487,7 +401,6 @@ theorem RL_R_closed_eq:
   apply (simp add:Distr_equal_check_dl_def RL_check_dl_def RL_check_def Distr_equal_check_def)
   by (metis RL_R_closed assms)
 
-
 theorem R_closed_RL_eq:
   assumes "f\<noteq>[]"
           "equiv (allstates f) (set r)"
@@ -500,6 +413,5 @@ theorem R_closed_RL_eq:
   apply presburger 
   apply (simp add:Distr_equal_check_dl_def RL_check_dl_def RL_check_def Distr_equal_check_def)
   by (metis R_closed_RL assms)
-
 
 end

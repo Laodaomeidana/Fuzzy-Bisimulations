@@ -164,5 +164,4 @@ lemma subset_pre:"set (pre \<mu> s) \<subseteq> allstates \<mu>"
   apply (simp add:inclusion_def)
   by auto
 
-
 end

@@ -42,13 +42,41 @@ lemma init_R_list_Cons:
   apply (induct xs)
   apply simp_all
   done
-lemma init_R_list_equiv:"s\<noteq>{} \<Longrightarrow>r = s\<times>s \<Longrightarrow> equiv s r"
+(*lemma init_R_list_equiv:"s\<noteq>{} \<Longrightarrow>r = s\<times>s \<Longrightarrow> equiv s r"
   apply (simp add: equiv_def)
   apply auto
   apply (simp add: refl_onI)
   apply (simp add: converse_Times sym_conv_converse_eq)
   by (metis SigmaD1 SigmaD2 SigmaI transI)
-
+*)
+lemma init_R_list_equiv:
+  assumes "s \<noteq> {}" and "r = s \<times> s"
+  shows "equiv s r"
+proof -
+  have "refl_on s r"
+  proof show "r \<subseteq> s \<times> s" using \<open>r = s \<times> s\<close> by simp
+  next show " \<And>x. x \<in> s \<Longrightarrow> (x, x) \<in> r" using \<open>r = s \<times> s\<close> by auto
+  qed
+  moreover have "sym r"
+  proof
+    fix x y
+    assume "(x, y) \<in> r"
+    then have "(x, y) \<in> s \<times> s" using \<open>r = s \<times> s\<close> by simp
+    then have "x \<in> s" and "y \<in> s" by auto
+    hence "(y, x) \<in> s \<times> s" by (simp add: SigmaI)
+    thus "(y, x) \<in> r" using \<open>r = s \<times> s\<close> by simp
+  qed
+  moreover have "trans r"
+  proof
+    fix x y z
+    assume "(x, y) \<in> r" and "(y, z) \<in> r"
+    then have "x \<in> s" and "y \<in> s" and "z \<in> s" using \<open>r = s \<times> s\<close> by auto
+    hence "(x, z) \<in> s \<times> s" by (simp add: SigmaI)
+    thus "(x, z) \<in> r" using \<open>r = s \<times> s\<close> by simp
+  qed
+  ultimately show ?thesis
+    unfolding equiv_def by simp
+qed
 
 
 fun R_right::"R \<Rightarrow> State \<Rightarrow> State list" where
@@ -87,23 +115,47 @@ lemma R_right_correct: "(s, x) \<in> set r \<longleftrightarrow> x \<in> set (R_
   by (induct r s rule: R_right.induct) auto
 lemma R_left_correct: "(x, s) \<in> set r \<longleftrightarrow> x \<in> set (R_left r s)"
   by (induct r s rule: R_left.induct) auto
-lemma R_right_R_left:
-  "t \<in> set (R_right r s) \<Longrightarrow> s \<in> set (R_left r t)"
-  proof(induct r s rule: R_left.induct)
-    case (1 s)
-    then show ?case by simp
-  next
-    case (2 x xs s)
-    then show ?case
-      by (smt (verit) R_left.simps(2) R_right.simps(2) insertCI list.distinct(1) list.inject list.simps(15) neq_Nil_conv set_ConsD) 
+
+lemma R_right_R_left: "t \<in> set (R_right r s) \<Longrightarrow> s \<in> set (R_left r t)"
+  using R_left_correct R_right_correct by blast
+
+
+(*
+lemma R_right_symR:
+  assumes "sym (set r)"
+  shows "set (R_right r s1) = set (R_left r s1)"
+proof -
+  have "\<And>x. x \<in> set (R_right r s1) \<longleftrightarrow> x \<in> set (R_left r s1)"
+  proof
+    fix x assume "x \<in> set (R_right r s1)"
+    then have "(s1, x) \<in> set r"
+      using R_right_correct by blast
+    moreover from assms have "(x, s1) \<in> set r"
+      unfolding sym_def using calculation by auto
+    hence "x \<in> set (R_left r s1)"
+      using R_left_correct by blast
+    thus "x \<in> set (R_left r s1)" .
+  next fix x assume "x \<in> set (R_left r s1)"
+    then have "(x, s1) \<in> set r" using R_left_correct by blast
+    moreover from assms have "(s1, x) \<in> set r"
+      unfolding sym_def using calculation by auto
+    hence "x \<in> set (R_right r s1)"
+      using R_right_correct by blast
+    thus "x \<in> set (R_right r s1)" .
   qed
+  thus ?thesis by auto
+qed
+*)
+
 lemma R_right_symR:"sym (set r) \<Longrightarrow> set (R_right r s1) = set (R_left r s1)"
-  apply (simp add :sym_def)
-  apply auto
+  apply (auto simp add :sym_def)
   apply (subgoal_tac"(s1,x)\<in>set r \<and> (x,s1)\<in> set r")
   using R_left_correct apply blast
   using R_right_correct apply blast
   using R_left_correct R_right_correct by blast
+
+
+
 
 
 fun get_R_states::"R\<Rightarrow>State list" where
@@ -115,13 +167,13 @@ lemma get_R_states_empty:
   by auto
 lemma get_R_states_notempty:"s1\<in>set(get_R_states r) \<Longrightarrow> r\<noteq>[]"
   by auto
+
 lemma get_R_states_cons:
   "get_R_states (xs@ys) = (get_R_states xs @ get_R_states ys)"
   apply (induct xs)
   apply simp
-  apply (subgoal_tac "get_R_states ((a # xs) @ ys) = get_R_states (a # xs @ ys)") defer
-  apply simp
-  by auto
+  by simp
+  
 lemma get_R_states_set:
   "set (get_R_states r) = {s. \<exists>t. (s, t) \<in> set r} \<union> {t. \<exists>s. (s, t) \<in> set r}"
   by (induct r rule:get_R_states.induct) auto
@@ -133,19 +185,12 @@ lemma get_R_states_subempty:"set (get_R_states r1) \<subseteq> set (get_R_states
   apply (induct r1)
   apply simp
   by auto
+
 lemma get_R_states_delsubset:"set (get_R_states (a # r)) =  s \<Longrightarrow>  (s - {fst a} - {snd a}) \<subseteq> set (get_R_states r)"
-  apply (induct r arbitrary:s)
-  apply simp
-  apply (subgoal_tac "s - {fst a} - {snd a}- {fst aa} - {snd aa} \<subseteq> set (get_R_states ( r))")
-  apply (smt (verit) Diff_insert0 Diff_insert2 get_R_states_list_set get_R_states_subset get_R_statses_set_correct insert_Diff insert_subset list.set_intros(1) prod.collapse subset_trans)
   by auto
+
 lemma get_R_states_setset:"set (get_R_states r)= \<Union>s \<Longrightarrow> \<forall>x\<in>s. card x = 1  \<Longrightarrow> x\<in>set (get_R_states r) \<longleftrightarrow> {x}\<in>s"
-  apply (induct r)
-  apply simp
-  apply auto
-  by (metis card_1_singleton_iff empty_iff insert_iff)
-
-
+  by (metis Union_iff card_1_singletonE singleton_iff)
 
 definition RL_check ::"R \<Rightarrow> Distr \<Rightarrow> Distr \<Rightarrow> bool" where
 "RL_check r \<mu> \<nu> \<equiv> (\<forall>s1\<in> set(get_R_states r). 
@@ -153,7 +198,6 @@ definition RL_check ::"R \<Rightarrow> Distr \<Rightarrow> Distr \<Rightarrow> b
                                 ((get_value \<nu> s1) \<le> (get_values \<mu> (R_left r s1))))"
 definition RL_check_dl::"R  \<Rightarrow> Distr list \<Rightarrow> Distr list \<Rightarrow> bool" where
 "RL_check_dl r d1 d2 \<equiv> d1\<noteq>[]\<and>d2\<noteq>[]\<and>(\<forall>\<mu>\<in>set d1.  \<exists>\<nu>\<in> set d2.  RL_check r \<mu> \<nu>)"
-
 
 lemma RL_check_value_order:
   assumes "RL_check r \<mu> \<nu>"
@@ -178,8 +222,6 @@ lemma RL_check_dl_soundness_complete:
   shows "\<forall>\<mu>\<in>set d1. \<exists>\<nu>\<in>set d2. RL_check r \<mu> \<nu> \<and> (\<forall>s1\<in>set (get_R_states r). get_value \<mu> s1 \<le> get_values \<nu> (R_right r s1)) 
                                               \<and>(\<forall>s1\<in>set (get_R_states r). get_value \<nu> s1 \<le> get_values \<mu> (R_left r s1))"
   using RL_check_dl_soundness_value_order assms(1) by blast
-
-
 
 fun allact::"NFTS \<Rightarrow> Act list" where
 "allact [] = []"|
@@ -242,15 +284,11 @@ termination
   apply (simp add: length_BIS order_neq_le_trans)
   using length_BIS_uneq by force
 
-lemma BIS_induct_subset:"set (BIS_induct r f) \<subseteq> set r"
-  apply (induct r f rule:BIS_induct.induct)
-  apply simp
-  by (metis (no_types) BIS_induct.simps(2) BIS_subset dual_order.trans)
+
 
 export_code BIS BIS_induct in Haskell module_name Example
 
 definition equivalence_R ::"NFTS \<Rightarrow> R"where
 "equivalence_R f \<equiv>  BIS_induct (init_R_list (allstates_list f) (allstates_list f)) f"
-
 
 end
