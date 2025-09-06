@@ -3,7 +3,7 @@ theory Application
 begin
 
 type_synonym FRDF = "NFTS"
-type_synonym FPN = "NFTS"
+type_synonym G = "NFTS"
 
 definition "f1::NFTS \<equiv> [(''s'',''a'',[(0.7,''s1''),(0.6,''s2'')]),
                         (''s'',''a'',[(0.6,''s3''),(0.8,''s4'')]),
@@ -117,7 +117,7 @@ definition "R_FRDF::R\<equiv>[(''URL'', ''URL''), (''URL'', ''Jerry@yahoo.com'')
 value "R_closed_set (BIS_induct R_FRDF FRDF_Ex) FRDF_Ex"
 
 
-definition FPN_Ex::"FPN"where
+definition FPN_Ex::"G"where
 "FPN_Ex \<equiv> [(''p1'',''t1'',[(0.9,''p3''),(0.2,''p4'')]),
             (''p1'',''t2'',[(0.1,''p3''),(0.9,''p4''),(0.1,''p5'')]),
             (''p1'',''t3'',[(0.2,''p4''),(0.9,''p5'')]),
